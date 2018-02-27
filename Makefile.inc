@@ -4,5 +4,5 @@ F90 = gfortran
 CC  = gcc
 FFLAGS = -O3
 CFLAGS = -O3
-LDLIBS = -L./dot_prod -lsingle_bblas -L./lbstime -llbstime
+LDLIBS = -L./single_thread -lsingle_bblas -L./lbstime -llbstime
 

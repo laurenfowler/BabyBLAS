@@ -1,6 +1,6 @@
-//test progra
+//test program
 
-double dot(int num_threads, int N, double *vec1, double *vec2);
+//double dot(int num_threads, int N, double *vec1, double *vec2);
 
 int main(){
 
@@ -13,7 +13,6 @@ int main(){
 
 	ans = dot(1, 1, vec1, vec2);
 	
-
 
 return 0;
 }
