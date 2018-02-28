@@ -1,6 +1,7 @@
+//#include "dot.h"
 //test program
 
-//double dot(int num_threads, int N, double *vec1, double *vec2);
+double dot_(int num_threads, int N, double *vec1, double *vec2);
 
 int main(){
 
@@ -11,7 +12,7 @@ int main(){
 	double *vec1 = &arr1[0];
 	double *vec2 = &arr2[0];
 
-	ans = dot(1, 1, vec1, vec2);
+	ans = dot_(1, 1, vec1, vec2);
 	
 
 return 0;

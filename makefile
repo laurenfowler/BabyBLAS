@@ -6,11 +6,11 @@
 
 include Makefile.inc
 
-all : test single_thread lbstime
+all : testprog single_thread lbstime
 
 #Tried liking library to test.o file???
-test: test.o single_thread lbstime
-	$(CC) test.o -L. -lsingle_bblas -o test $(LDLIBS) 
+testprog: test.o single_thread lbstime
+	$(CC) test.o -o testprog $(LDLIBS)
 
 test.o: test.c
 	$(CC) test.c -c
@@ -25,7 +25,7 @@ clean:
 	cd single_thread && $(MAKE) clean
 	cd lbstime && $(MAKE) clean
 	rm *.o
-	rm test
+	rm testprog
 
 pristine:
 	cd single_thread && $(MAKE) pristine
