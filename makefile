@@ -6,11 +6,11 @@
 
 include Makefile.inc
 
-all : testprog single_thread lbstime
+all : testprog pthreads single_thread lbstime
 
 #Tried liking library to test.o file???
-testprog: test.o single_thread lbstime
-	$(CC) test.o -o testprog $(LDLIBS)
+testprog: test.o pthreads single_thread lbstime
+	$(CC) test.o -o testprog $(LDLIBS) $(SYSLIBS)
 
 test.o: test.c
 	$(CC) test.c -c
@@ -18,19 +18,24 @@ test.o: test.c
 single_thread: 
 	cd single_thread && $(MAKE)
 
+pthreads: 
+	cd pthreads && $(MAKE)
+
 lbstime: 
 	cd lbstime && $(MAKE)
 
-clean: 	
+clean:
+	cd pthreads && $(MAKE) clean 	
 	cd single_thread && $(MAKE) clean
 	cd lbstime && $(MAKE) clean
 	rm *.o
 	rm testprog
 
 pristine:
+	cd pthreads && $(MAKE) pristine
 	cd single_thread && $(MAKE) pristine
 	cd lbstime && $(MAKE) pristine
 	rm *.o
 
 #This next target gets "made" every time
-.PHONY: single_thread lbstime	
+.PHONY: pthreads single_thread lbstime	
