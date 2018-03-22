@@ -21,7 +21,7 @@ struct args{
 	int startRow;
 	int stopRow;
 	double final_sum;
-	double *ansvec;
+	//double *ansvec;
 	double *v1ptr;
 	double *v2ptr;
 };
@@ -57,19 +57,25 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2){
 		*(num_rows+i) = *(num_rows+i)+1;
 	}
 
+    printf("Memory malloced\n");
+
 	// malloc memery for struct
 	stopRow=0;
 	for(int i=0; i < numThreads; i++){
 		startRow=stopRow;
 		stopRow= startRow + *(num_rows+i);
+        thread_args = ( struct args * )  malloc(sizeof( struct args));
 		thread_args->N = len;
 		thread_args->startRow = startRow;
 		thread_args->stopRow = stopRow;
 		thread_args->v1ptr = vec1;
 		thread_args->v2ptr = vec2;
-		thread_args->ansvec = ansvec;
+	//	thread_args->ansvec = ansvec;
+        printf("For thread %d, pushed data into struct\n", i);
 
 		pthread_create( thread_id+i, NULL, &dot_thread_worker, thread_args );
+
+        printf("just called pthread_create\n");
 	}
 
 
@@ -77,18 +83,18 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2){
 		pthread_join((*thread_id+i), NULL);
 	}
 
-	ansvec = thread_args ->ansvec;
+//	ansvec = thread_args ->ansvec;
 	
 
-	for(int i=0; i<len; i++){
-		sum += *(ansvec+i);
-	}
+//	for(int i=0; i<len; i++){
+//		sum += *(ansvec+i);
+//	}
 
-	return sum;
-	
 	free (ansvec);
 	free(num_rows);
 	free(thread_id);
+
+	return sum;
 }
 
 
@@ -98,21 +104,30 @@ void *dot_thread_worker( struct args *thread_args){
 	int i, startRow, stopRow, len;
 	double *vec1, *vec2, *ans;
 	double sum;
-	
+
+    printf("in worker function\n");
 	//unpack thread_args struct into normal variables
 	len = thread_args->N;
+    printf("unpacked length\n");
 	startRow = thread_args->startRow;
+    printf("unpacked startRow\n");
 	stopRow = thread_args->stopRow;
+    printf("unpacked stopRow\n");
 	vec1 = thread_args->v1ptr;
+    printf("unpacked vec1\n");
 	vec2 = thread_args->v2ptr;
-	ans = thread_args-> ansvec;
+    printf("unpacked vec2\n");
+	//ans = thread_args-> ansvec;
+    
 	
 	sum = 0;	
+
+    printf("startRow = %d, stopRow = %d\n", startRow, stopRow);
 
 	for (i=startRow; i<stopRow; i++){
 		*(ans+i) = *(vec1 + i) * *(vec2+i);
 	}
-	
+
 	free(thread_args);
 	pthread_exit(NULL);
 }		
