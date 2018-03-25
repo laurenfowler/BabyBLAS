@@ -21,7 +21,7 @@ struct args{
 	int startRow;
 	int stopRow;
 	double final_sum;
-	//double *ansvec;
+	double *ansvec;
 	double *v1ptr;
 	double *v2ptr;
 };
@@ -70,12 +70,12 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2){
 		thread_args->stopRow = stopRow;
 		thread_args->v1ptr = vec1;
 		thread_args->v2ptr = vec2;
-	//	thread_args->ansvec = ansvec;
-        printf("For thread %d, pushed data into struct\n", i);
+		thread_args->ansvec = ansvec;
+//        printf("For thread %d, pushed data into struct\n", i);
 
 		pthread_create( thread_id+i, NULL, &dot_thread_worker, thread_args );
 
-        printf("just called pthread_create\n");
+//        printf("just called pthread_create\n");
 	}
 
 
@@ -83,12 +83,13 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2){
 		pthread_join((*thread_id+i), NULL);
 	}
 
-//	ansvec = thread_args ->ansvec;
+	ansvec = thread_args ->ansvec;
 	
 
-//	for(int i=0; i<len; i++){
-//		sum += *(ansvec+i);
-//	}
+	for(int i=0; i<len; i++){
+	//	printf("%f", *(ansvec+i), "\n");
+		sum += *(ansvec+i);
+	}
 
 	free (ansvec);
 	free(num_rows);
@@ -108,21 +109,21 @@ void *dot_thread_worker( struct args *thread_args){
     printf("in worker function\n");
 	//unpack thread_args struct into normal variables
 	len = thread_args->N;
-    printf("unpacked length\n");
+//    printf("unpacked length\n");
 	startRow = thread_args->startRow;
-    printf("unpacked startRow\n");
+//    printf("unpacked startRow\n");
 	stopRow = thread_args->stopRow;
-    printf("unpacked stopRow\n");
+//    printf("unpacked stopRow\n");
 	vec1 = thread_args->v1ptr;
-    printf("unpacked vec1\n");
+//    printf("unpacked vec1\n");
 	vec2 = thread_args->v2ptr;
-    printf("unpacked vec2\n");
-	//ans = thread_args-> ansvec;
+//    printf("unpacked vec2\n");
+	ans = thread_args-> ansvec;
     
 	
 	sum = 0;	
 
-    printf("startRow = %d, stopRow = %d\n", startRow, stopRow);
+//    printf("startRow = %d, stopRow = %d\n", startRow, stopRow);
 
 	for (i=startRow; i<stopRow; i++){
 		*(ans+i) = *(vec1 + i) * *(vec2+i);
