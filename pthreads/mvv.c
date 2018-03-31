@@ -27,7 +27,8 @@ struct args{
 
 void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults){
 
-	printf("in mvv function");
+    //Lets put an end of line marker here to make sure it gets printed
+	printf("in mvv function\n");
 	int threads = *num_threads;
 	int size = *N;
 	int *num_rows;
@@ -35,7 +36,7 @@ void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults){
 	pthread_t *thread_id;
 	struct args *thread_args;
 
-	
+    printf("completed initializations, threads = %d, size = %d\n", threads, size);
 	if(size<threads){
 		int i, j;
 
@@ -47,14 +48,14 @@ void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults){
 	}
 	else{
 
-	printf("about to malloc thread_id array");
+	printf("about to malloc thread_id array\n");
 	//Malloc thread_id array 
 	thread_id = (pthread_t *) malloc (threads * sizeof(pthread_t));
 
 	//malloc num_rows array
 	num_rows = (int *) malloc(threads* sizeof(int));
 
-	printf("about to allocate rows per thread");
+	printf("about to allocate rows per thread\n");
 	//determine num rows each thread gets
 	for (int i=0; i<threads; i++){
 		*(num_rows+i) = size/threads;
@@ -63,7 +64,7 @@ void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults){
 		*(num_rows+i) = *(num_rows + i) + 1;
 	}
 
-	printf("about to malloc struct data");
+	printf("about to malloc struct data\n");
 	//malloc struct data
 	stop =0;
 	for(int i=0; 9<threads; i++){
@@ -80,10 +81,14 @@ void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults){
 		pthread_create(thread_id+i, NULL, &mvv_thread_worker, thread_args);
 		}
 
+    printf("all threads created\n");
+
 	for(int i=0; i< threads; i++){
 		pthread_join( *(thread_id+i), NULL);
 	}
 	
+    printf("all threads joined\n");
+
 	free(num_rows);
 	free(thread_id);
 
@@ -92,7 +97,7 @@ void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults){
 
 void *mvv_thread_worker(struct args *thread_args){	
 
-	printf("in worker funciton");
+	printf("in worker funciton\n");
 	int i, j, start, stop, N;
 	double *ansvec, *vec, *mat;
 
@@ -104,6 +109,7 @@ void *mvv_thread_worker(struct args *thread_args){
 	vec = thread_args -> vec_ptr;
 	mat = thread_args -> mat_ptr;
 
+    printf(" start = %d, stop = %d\n", start, stop);    
 
 	for(i=start; i<stop; i++){
 		for(j=0; j<N; j++){

@@ -16,8 +16,11 @@ int main(){
 	
 	double *mat = (double *) malloc(size * size * sizeof(double));
 	double *vec2 = arr2;
-	double *vresults; 
-	int *N = &size;
+
+    //need to malloc space for results too
+	double *vresults = (double *) malloc( size * sizeof(double)); 
+	
+    int *N = &size;
 	int *num_threads = &threads;
 
 
@@ -39,9 +42,11 @@ int main(){
 		printf("\n");	
 	} 
 
-	printf("going to function");
+    // Let's add an end of line character to see if it puses the errors
+    // to the screen.
+	printf("going to function\n");
 	mvv_(num_threads, N, mat, vec2, vresults);
-	printf("back from function");
+	printf("back from function\n");
 
 	for(int i=0; i<size; i++){
 		printf("%f", *(vresults + i));
