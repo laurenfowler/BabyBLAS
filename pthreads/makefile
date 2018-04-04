@@ -11,8 +11,11 @@ vvm.o: vvm.c
 mvv.o: mvv.c
 	$(CC) -c mvv.c
 
-lib: dot.o vvm.o mvv.o
-	ar -rc libpthreads_bblas.a dot.o vvm.o mvv.o
+dls.o: dls.c
+	$(CC) -c dls.c
+
+lib: dot.o vvm.o mvv.o dls.o
+	ar -rc libpthreads_bblas.a dot.o vvm.o mvv.o dls.o
 	ranlib libpthreads_bblas.a
 
 #Default targets for cleaning up enviroment

@@ -67,7 +67,7 @@ void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults){
 	printf("about to malloc struct data\n");
 	//malloc struct data
 	stop =0;
-	for(int i=0; 9<threads; i++){
+	for(int i=0; i<threads; i++){
 		start = stop;
 		stop = start+*(num_rows+i);
 		thread_args = (struct args *) malloc(sizeof(struct args));
