@@ -130,6 +130,11 @@ int atoi(const char *str);
 		#ifdef VVM
 			vvm_(thread, N, vec1, vec2, ma);
 		#endif
+
+		#ifdef MVV
+			double *ma = (double *) malloc (size * size * sizeof(double));
+			mvv_(thread, N, ma, vec1, vec2); 
+		#endif
 		
 		#ifdef PAPI	
 			if (PAPI_read(eventSet, dp_ops) != PAPI_OK ) {
