@@ -7,6 +7,8 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2);
 void vvm_(int *num_threads, int *N, double *vec1, double *vec2, double *ma);
 void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults);
 void mmm_(int *num_threads, int*N, double *a, double *b, double *c);
+void dls_(int *num_threads, int *N, double *a, double *b, double *c);
+void ils_(int *num_threads, int *N, double *a, double *b, double *c);
 double walltime_();
 double cputime_();
 int atoi(const char *str);
@@ -64,6 +66,61 @@ int atoi(const char *str);
 				*(vec2+i) = 1.0/x;
 			}
 			//end if VVM
+		#endif
+
+		#ifdef MVV
+			vec1 = (double *) malloc (size * sizeof(double));
+			//answer vec
+			vec2 = (double *) malloc (size * sizeof(double));
+			//initilze to 0
+			double *im = (double *) calloc (size * size, sizeof(double));
+			
+			x = 1.0;
+			//create identity matrix
+			for(i=0; i<size; i++){
+				*(im + (size * i) + i) = 1.0;
+			}
+
+			//create vector
+			for(i=0; i<size; i++){
+				*(vec1 + i) = x;
+				x = x + 1.0;
+			}
+
+		//endif MVV
+		#endif
+
+		#ifdef MMM
+			double *im = (double *) calloc (size * size, sizeof(double));
+			double *ma = (double *) malloc (size * size * sizeof(double));
+			double *ansma = (double *) malloc (size * size * sizeof(double));
+			
+			x = 1.0;
+			//create identity matrix and other matrix
+			for(i=0; i<size; i++){
+				*(im + (size * i) + i) = 1.0;
+				for(j=0; j<size; j++){
+					*(ma + (size * i) + j) = x;	
+					x = x + 1.0;
+				}
+			}
+
+		//endif MMM
+		#endif
+
+		#ifdef DLS
+			double *im = (double *) calloc(size * size, sizeof(double));
+			vec1 = (double *) malloc(size * sizeof(double));
+			vec2 = (double *) malloc(size * sizeof(double));
+		
+			x = 1.0;
+			for(i=0; i<size; i++){
+				*(im + (size * i) + i) = 1.0;
+				*(vec1 + i) = x;
+				x = x + 1.0;
+			}
+			
+
 		#endif
 
 		#ifdef PAPI
@@ -132,10 +189,29 @@ int atoi(const char *str);
 		#endif
 
 		#ifdef MVV
-			double *ma = (double *) malloc (size * size * sizeof(double));
-			mvv_(thread, N, ma, vec1, vec2); 
+			mvv_(thread, N, im, vec1, vec2);
 		#endif
-		
+
+		#ifdef MMM
+			mmm_(thread, N, im, ma, ansma);
+			
+			/*for(i=0; i<size; i++){
+				for(j=0; j<size; j++){
+					printf("%f", *(ansma + (size * i) + j));
+					printf(" ");
+				}
+				printf("\n");
+			} */
+
+		#endif
+
+		#ifdef DLS
+			dls_(thread, N, im, vec1, vec2);
+			for(i=0; i<size; i++){
+				printf("%f\n", *(vec2 + i));
+			}
+		#endif
+
 		#ifdef PAPI	
 			if (PAPI_read(eventSet, dp_ops) != PAPI_OK ) {
 		    	printf("Could not read first event set.\n");
@@ -173,6 +249,24 @@ int atoi(const char *str);
 			free(vec2);
 			free(ma);		
 		#endif
+
+		#ifdef MVV
+			free(vec1);
+			free(vec2);
+			free(im);
+		#endif
+
+		#ifdef MMM
+			free(ma);
+			free(im);
+			free(ansma);
+		#endif
+
+		#ifdef DLS
+			free(im);
+			free(vec1);
+			free(vec2);
+		#endif 
 	
 
 			return 0;

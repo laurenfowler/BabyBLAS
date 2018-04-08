@@ -10,7 +10,7 @@ all : testprog serial pthreads lbstime
 
 #Tried liking library to test.o file???
 testprog: test.o serial pthreads lbstime
-	$(CC) test.o $(LDLIBS) -o testprog $(SYSLIBS)
+	$(CC) test.o -o testprog $(LDLIBS) $(SYSLIBS)
 
 test.o: test.c
 	$(CC) $(DOPT) test.c -c
