@@ -21,8 +21,8 @@ ils.o: ils.c
 	$(CC) $(CFLAGS) -c ils.c
 
 lib: dot.o vvm.o mvv.o mmm.o dls.o ils.o
-	ar -rc libsingle_bblas.a dot.o vvm.o mvv.o mmm.o dls.o ils.o
-	ranlib libsingle_bblas.a
+	ar -rc libopenmp_bblas.a dot.o vvm.o mvv.o mmm.o dls.o ils.o
+	ranlib libopenmp_bblas.a
 
 #Default targets for cleaning up enviroment
 

@@ -14,8 +14,9 @@ void mvv_(int *num_threads, int *N, double *mat, double *vec, double *vresults){
 	int iter = *N;
 
 	for(i=0; i<iter; i++){
+		sum = 0;
 		for(j=0; j<iter; j++){
-			*(vresults+i) += *(mat+(iter*i)+j) * *(vec+j); 
+			*(vresults+i) += *(mat+(N*i)+j) * *(vec+j); 
 		}
 	}
 }

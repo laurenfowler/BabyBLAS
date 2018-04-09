@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -N serial_test
+#PBS -m abe
+#PBS -M fowler_l
+#PBS -j oe
+#PBS -k n
+#PBS -l nodes=1:hammer:ppn=1
+#
+cd BabyBLAS
+echo "5000 x 5000"
+testprog 5000

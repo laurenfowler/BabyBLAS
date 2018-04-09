@@ -8,7 +8,7 @@ extern "C" {
 
 // Computes the tensor product of two vectors 
 
-void vvm_(int *num_threads, int *len, double *va, double *vb, double *ma){
+void  vvm_(int *num_threads, int *len, double *va, double *vb, double *ma){
 
 	int i, j;
 

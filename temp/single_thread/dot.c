@@ -21,7 +21,7 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2){
 	sum = 0;	
 
 	for (i=0; i<len; i++){
-		sum = sum + (*(vec1 + i) * *(vec2 + i));
+		sum = sum + (vec1[i] * vec2[i]);
 	}
 
 	return sum;

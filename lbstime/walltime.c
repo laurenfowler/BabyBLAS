@@ -2,6 +2,7 @@
 //
 #include <stddef.h> /* defines NULL */
 #include <sys/time.h>
+#include <stdio.h>
 
 double factor = 1.0e-6;
 
@@ -17,6 +18,7 @@ extern "C" {
 
 double walltime_() 
 {
+
 	struct timeval tp;
 	int rtn;
 	double seconds;
