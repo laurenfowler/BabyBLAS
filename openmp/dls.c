@@ -24,8 +24,7 @@ extern "C" {
 #include <math.h>  
 #include <stdio.h>  
 #include <stdlib.h>
-
-/*  S E R I A L   C O D E  */
+#include <omp.h>
 
 
 /* Function prototype for code used in dls */
@@ -67,6 +66,12 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
         // entire row containing that value with the current
         // pivot row.
 
+		printf("before set num threads\n");
+		omp_set_num_threads(*threads);
+		printf("after set \n");
+		#pragma omp parallel shared(N) private(k,u,j)
+		{
+		printf("in loop\n");
         for (k=0;k<N-1;k++) {
             pivotMax = *(a+k*N+k);
             iPivot = k; 
@@ -110,6 +115,7 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
             }
 
         }
+		}
         // Now that we know we have reduced the matrices, start the 
         // back substitution process to solve for vector x.
 
