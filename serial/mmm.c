@@ -64,7 +64,6 @@ for (i=0; i<veclen; i++) {
 #else
 
 // Normal Matrix Multiplication
-
     for (i=0; i<veclen; i++) {
         for (j=0; j<veclen; j++) {
             *(c+(i*veclen+j)) = 0.0;

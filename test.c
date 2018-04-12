@@ -17,7 +17,7 @@ int atoi(const char *str);
 
 		int main(int argc, char *argv[]){
 
-			int i, j, size;
+			int i, j, size, thr;
 			int *N;
 			double ans, x;
 			double *vec1, *vec2;
@@ -30,8 +30,8 @@ int atoi(const char *str);
 			int check;			
 
 			//thread
-			j=1;
-			int *thread = &j;
+			thr=atoi(argv[2]);
+			int *thread = &thr;
 
 			//assign size arguments
 			size = atoi(argv[1]);
@@ -267,12 +267,12 @@ int atoi(const char *str);
 			//printf("Estimated megaflops = %f\n", (2*(double)(size*size*size)/cpu)/1000000.0);
 
 			//Papi flops
-			//printf(" DP_OPS Count from PAPI= %15lld\n", dp_ops[0]);
+			printf(" DP_OPS Count from PAPI= %15lld\n", dp_ops[0]);
 
 			//compute and print megaflops based on PAPI counters
 			mflops = (double) (dp_ops[0]/cpu)/1000000.0;
-			printf("%d %f %f %f\n", size, mflops, cpu, wall);
-
+			//j is number of threads
+			printf("%d %f %f %f %15lld %d \n", size, mflops, cpu, wall, dp_ops[0], thr);
 		#endif
 	
 		#ifdef DOT

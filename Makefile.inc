@@ -4,7 +4,6 @@ F90 = gfortran
 CC  = gcc
 FFLAGS = -O3
 CFLAGS = -O2
-DOPT = -DDLS
-LDLIBS = -L./serial -lsingle_bblas -L./lbstime -llbstime  
-SYSLIBS = -lpthread -lpapi 
+LDLIBS = -L./serial -lserial_bblas -L./pthreads -lpthreads_bblas -L./lbstime -llbstime  
+SYSLIBS = -lgomp -lpthread -lpapi 
 

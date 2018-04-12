@@ -1,0 +1,244 @@
+        -:    0:Source:dls.c
+        -:    0:Graph:dls.gcno
+        -:    0:Data:-
+        -:    0:Runs:0
+        -:    0:Programs:0
+        -:    1:
+        -:    2:/**********************************************************************
+        -:    3: *
+        -:    4: * DIRECT LINEAR SOLVER
+        -:    5: *
+        -:    6: * Andrew J. Pounds, Ph.D.
+        -:    7: * Spring 2018
+        -:    8: *
+        -:    9: * Unless otherwise noted, all code and methods belong to the author.
+        -:   10: * Equations for Gaussian Elimnation with Partial Pivoting and the the
+        -:   11: * LU Decomposition we adapted from Golub and van Loan,
+        -:   12: * "Matrix Computations", Johns Hopkins University press, 1996.
+        -:   13: *
+        -:   14: **********************************************************************/
+        -:   15:
+        -:   16:#ifdef __cplusplus
+        -:   17:extern "C" {
+        -:   18:#endif
+        -:   19:    void dls_( int *threads, int *len,  double *a, double *b, double*c );
+        -:   20:#ifdef __cplusplus
+        -:   21:}
+        -:   22:#endif
+        -:   23:
+        -:   24:#include <math.h>  
+        -:   25:#include <stdio.h>  
+        -:   26:#include <stdlib.h>
+        -:   27:
+        -:   28:/*  S E R I A L   C O D E  */
+        -:   29:
+        -:   30:
+        -:   31:/* Function prototype for code used in dls */
+        -:   32:int strictlyDiagonallyDominant( int N, double *a ); 
+        -:   33:
+        -:   34:
+    #####:   35:void dls_( int *threads, int *len,  double *a, double *b, double *x ){
+        -:   36:
+        -:   37:    /* in serial code, *threads not used. It is retained here so the code can be called
+        -:   38:     * identically to the threaded methods.
+        -:   39:     */
+        -:   40:
+        -:   41:
+        -:   42:    int i, j, k, N, u;
+        -:   43:    int singular, iPivot, rows, rows2;
+        -:   44:    double pivotMax, tmp, *y;
+        -:   45:    double sum;
+    #####:   46:    double ZERO = 0.0;
+        -:   47:    int *p;
+        -:   48:
+    #####:   49:    N = *len;
+        -:   50:
+        -:   51:    // Check A for strict diagonal dominance to see if we can reduce the matrix without 
+        -:   52:    // doing any row interchanges.   We could also check for positive definiteness to
+        -:   53:    // achieve the same thing.
+        -:   54:
+    #####:   55:    if ( ! strictlyDiagonallyDominant( N, a ) ) {
+        -:   56:
+        -:   57:        // Do Gaussian Elimination with Partial Pivoting 
+        -:   58:        //   (modified from Golub and van Load, Chapter 3) 
+        -:   59:
+        -:   60:        // Create an array to hold pivot swaps 
+        -:   61:
+    #####:   62:        p = malloc( (N-1) * sizeof(int) );
+        -:   63:
+    #####:   64:        for (k=0;k<N-1;k++) *(p+k)=k;
+        -:   65:
+        -:   66:        // Search for largest value in the column and swap the 
+        -:   67:        // entire row containing that value with the current
+        -:   68:        // pivot row.
+        -:   69:
+    #####:   70:        for (k=0;k<N-1;k++) {
+    #####:   71:            pivotMax = *(a+k*N+k);
+    #####:   72:            iPivot = k; 
+    #####:   73:            for (u=k;u<N;u++) {
+    #####:   74:                if ( fabs(*(a+u*N+k)) > fabs(pivotMax) ) {
+    #####:   75:                    pivotMax = *(a+u*N+k);
+    #####:   76:                    iPivot = u;
+        -:   77:                }
+        -:   78:            }
+        -:   79:            // If a greater pivot value was found, swap the rows.
+    #####:   80:            if ( iPivot != k ) {
+    #####:   81:                u = iPivot; 
+    #####:   82:                for (j=k;j<N;j++) {
+    #####:   83:                    tmp = *(a+k*N+j);
+    #####:   84:                    *(a+k*N+j) = *(a+u*N+j);
+    #####:   85:                    *(a+u*N+j)=tmp;
+        -:   86:                }
+        -:   87:            }
+        -:   88:
+        -:   89:            // Now do block reduction
+    #####:   90:            *(p+k) = iPivot;
+    #####:   91:            if ( *(a+k*N+k) != ZERO ) {
+    #####:   92:                for (rows=k+1;rows<N;rows++) { 
+    #####:   93:                    *(a+rows*N+k) = *(a+rows*N+k) / *(a+k*N+k);
+        -:   94:
+    #####:   95:                    for (rows2=k+1;rows2<N;rows2++) { 
+    #####:   96:                        *(a+rows*N+rows2) = *(a+rows*N+rows2) - 
+    #####:   97:                            *(a+rows*N+k) * *(a+k*N+rows2) ;
+        -:   98:                    }
+        -:   99:                }
+        -:  100:            }
+        -:  101:
+        -:  102:            else {
+        -:  103:
+        -:  104:                /* Handle the case of a zero pivot element, singular matrix */
+        -:  105:
+    #####:  106:                printf( "Element a[%d][%d} = %f\n", k, k, *(a+k*N+k)); 
+    #####:  107:                printf( " *** MATRIX A IS SINGULAR *** \n");
+    #####:  108:                printf( "    -- EXECUTION HALTED --\n");
+    #####:  109:                exit(1);
+        -:  110:            }
+        -:  111:
+        -:  112:        }
+        -:  113:        // Now that we know we have reduced the matrices, start the 
+        -:  114:        // back substitution process to solve for vector x.
+        -:  115:
+        -:  116:
+        -:  117:        /* We now need to arrange b so that it has undergone the same 
+        -:  118:         * operations as the matrix a.  This will then form
+        -:  119:         * the vector y for the solution of Ux=y where U is the 
+        -:  120:         * upper-triangular matrix formed in the elimination process
+        -:  121:         * above. 
+        -:  122:         */
+        -:  123:
+    #####:  124:        for (k=0; k<N-1; k++ ) {
+        -:  125:            // Swap rows x with p(k) 
+    #####:  126:            tmp = *(b+k);
+    #####:  127:            *(b+k) = *(b+ *(p+k));
+    #####:  128:            *(b+ *(p+k)) = tmp;
+        -:  129:
+    #####:  130:            for (j=k+1;j<N;j++) 
+    #####:  131:                *(b+j)= *(b+j) - *(b+k) * *(a+N*j+k);  
+        -:  132:        } 
+        -:  133:
+        -:  134:        // Now do the backward substitution to get the solution
+        -:  135:        // vector x
+        -:  136:
+    #####:  137:        *(b+N-1) = *(b+N-1) / *(a+N*(N-1)+(N-1));
+    #####:  138:        for (i=N-2;i>=0;i--){
+    #####:  139:            tmp = 0.0;
+    #####:  140:            for (j=i+1;j<N;j++) {
+    #####:  141:                tmp = tmp + *(a+i*N+j) * *(b+j);
+        -:  142:            }
+    #####:  143:            *(b+i) = ( *(b+i) - tmp ) / *(a+i*N+i); 
+        -:  144:        }
+        -:  145:
+    #####:  146:        for (i=0;i<N;i++) *(x+i) = *(b+i);
+        -:  147:
+        -:  148:        // At this point the solution to the system should be in vector x 
+        -:  149:
+    #####:  150:        free(p);
+        -:  151:    }
+        -:  152:
+        -:  153:    else {
+        -:  154:
+        -:  155:        // Since we know the matrix is strictly diagonally dominant, verify
+        -:  156:        // that none of the pivot elements are equal to zero
+        -:  157:
+    #####:  158:        singular = 1; 
+    #####:  159:        i=0;
+    #####:  160:        while ( i<N  && singular ) {
+    #####:  161:            singular = *(a+i*N+i) == ZERO;   
+    #####:  162:            i++;
+        -:  163:        }
+        -:  164:
+    #####:  165:        if ( singular ) {
+    #####:  166:            printf( " *** MATRIX A IS SINGULAR *** \n");
+    #####:  167:            printf( "    -- EXECUTION HALTED -- \n");
+    #####:  168:            exit(1);
+        -:  169:        }
+        -:  170:
+        -:  171:        // We know at this point that we have a strictly diagonally dominant matrix that is
+        -:  172:        // not singular -- so it sould be possible to do the LU factorization.
+        -:  173:        //   (modified from Golub and van Loan, Chapter 3)
+        -:  174:
+    #####:  175:        for (k=0; k<N-1; k++) {
+    #####:  176:            for (rows=k+1;rows<N;rows++) {
+    #####:  177:                *(a+rows*N+k) = *(a+rows*N+k) / *(a+k*N+k);
+        -:  178:
+    #####:  179:                for (rows2=k+1;rows2<N;rows2++) { 
+    #####:  180:                    *(a+rows*N+rows2) = *(a+rows*N+rows2) - 
+    #####:  181:                        *(a+rows*N+k) * *(a+k*N+rows2) ;
+        -:  182:                }
+        -:  183:            }
+        -:  184:        }
+        -:  185:
+        -:  186:        // At this point the LU factorizaton should be done and we have to do two
+        -:  187:        // triangular back substitutions.  The solution to Ax=b is solved by first 
+        -:  188:        // solving Ly=b for y and then Ux=y for the solution vector x.
+        -:  189:
+        -:  190:        // Solving lower-triangular (Ly=b) first, overwriting b with y
+        -:  191:
+    #####:  192:        for (k=0; k<N-1; k++ ) {
+    #####:  193:            for (j=k+1;j<N;j++) 
+    #####:  194:                *(b+j)= *(b+j) - *(b+k) * *(a+N*j+k);  
+        -:  195:        } 
+        -:  196:
+        -:  197:        // Now we can do the backward substitution to get the solution
+        -:  198:        // vector x for the upper-triangular system (Ux=y) overwriting y (stored in b)
+        -:  199:        // with x
+        -:  200:
+    #####:  201:        *(b+N-1) = *(b+N-1) / *(a+N*(N-1)+(N-1));
+    #####:  202:        for (i=N-2;i>=0;i--){
+    #####:  203:            tmp = 0.0;
+    #####:  204:            for (j=i+1;j<N;j++) {
+    #####:  205:                tmp = tmp + *(a+i*N+j) * *(b+j);
+        -:  206:            }
+    #####:  207:            *(b+i) = ( *(b+i) - tmp ) / *(a+i*N+i); 
+        -:  208:        }
+        -:  209:
+    #####:  210:        for (i=0;i<N;i++) *(x+i) = *(b+i);
+        -:  211:
+        -:  212:        // At this point the solution to the system should be in vector x 
+        -:  213:
+        -:  214:
+        -:  215:    }
+        -:  216:
+    #####:  217:}
+        -:  218:
+        -:  219:
+    #####:  220:int strictlyDiagonallyDominant( int N, double *a ) {
+        -:  221:
+        -:  222:    double sum;
+        -:  223:    int i, testPassed, row;
+        -:  224:
+    #####:  225:    testPassed = 1;
+    #####:  226:    row = 0;
+    #####:  227:    sum = 0.0;
+    #####:  228:    for (row=0;row<N;row++) { 
+    #####:  229:        if (testPassed) {
+    #####:  230:            sum = 0.0;
+    #####:  231:            for (i=0;i<N;i++) sum+=*(a+row*N+i);
+    #####:  232:            sum-=fabs(*(a+row*N+row)); 
+    #####:  233:            testPassed = fabs(*(a+row*N+row)) > sum;
+        -:  234:        }
+        -:  235:    }
+        -:  236:
+    #####:  237:    return testPassed;
+        -:  238:}
+        -:  239:

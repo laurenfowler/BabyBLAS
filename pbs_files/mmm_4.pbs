@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -N 4mmm_serial
+#PBS -m abe
+#PBS -M fowler_l
+#PBS -j oe
+#PBS -k n
+#PBS -l nodes=1:hammer:ppn=4,walltime=2:30:00
+#
+cd BabyBLAS
+make -s pristine; make -s DOPT="-DMMM -DPAPI"; testprog 200 4; testprog 200 4; testprog 200 4;
+make -s clean; make -s DOPT="-DMMM -DPAPI"; testprog 500 4; testprog 500 4; testprog 500 4;
+make -s clean; make -s DOPT="-DMMM -DPAPI"; testprog 1000 4; testprog 1000 4; testprog 1000 4;
+make -s clean; make -s DOPT="-DMMM -DPAPI"; testprog 2500 4; testprog 2500 4; testprog 2500 4;
+make -s clean; make -s DOPT="-DMMM -DPAPI"; testprog 5000 4; testprog 5000 4; testprog 5000 4;
+make -s clean; make -s DOPT="-DMMM -DPAPI"; testprog 7500 4; testprog 7500 4; testprog 7500 4;
+

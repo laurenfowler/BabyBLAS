@@ -57,8 +57,6 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2){
 		*(num_rows+i) = *(num_rows+i)+1;
 	}
 
-    printf("Memory malloced\n");
-
 	// malloc memery for struct
 	stopRow=0;
 	for(int i=0; i < numThreads; i++){

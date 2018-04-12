@@ -82,7 +82,7 @@ void vvm_(int *num_threads, int *len, double *va, double *vb, double *ma){
 		}
 
 //		ma = thread_args -> matrix;
-
+		//printf("end");
 		free(num_rows);
 		free(thread_id);
 
@@ -91,7 +91,6 @@ void vvm_(int *num_threads, int *len, double *va, double *vb, double *ma){
 
 void *vvm_thread_worker(struct args *thread_args){
 
-	printf("in worker function\n");
 	int i, j, start, stop, N;
 	double *vec1, *vec2, *matrix;
 	//unpack thread_args
