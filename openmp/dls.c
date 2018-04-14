@@ -66,13 +66,14 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
         // entire row containing that value with the current
         // pivot row.
 
-		printf("before set num threads\n");
+		//printf("before set num threads\n");
 		omp_set_num_threads(*threads);
-		printf("after set \n");
-		#pragma omp parallel shared(N) private(k,u,j)
-		{
-		printf("in loop\n");
+		//printf("after set \n");
+		
+		//printf("in loop\n");
         for (k=0;k<N-1;k++) {
+			//int n= omp_get_thread_num();
+			//printf("thread num: %d\n", n);
             pivotMax = *(a+k*N+k);
             iPivot = k; 
             for (u=k;u<N;u++) {
@@ -94,6 +95,11 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
             // Now do block reduction
             *(p+k) = iPivot;
             if ( *(a+k*N+k) != ZERO ) {
+				printf("doing block reduction\n");
+				
+				#pragma omp parallel shared(N) private(rows, rows2)
+				{
+				#pragma omp for
                 for (rows=k+1;rows<N;rows++) { 
                     *(a+rows*N+k) = *(a+rows*N+k) / *(a+k*N+k);
 
@@ -102,6 +108,8 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
                             *(a+rows*N+k) * *(a+k*N+rows2) ;
                     }
                 }
+				}
+
             }
 
             else {
@@ -115,7 +123,6 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
             }
 
         }
-		}
         // Now that we know we have reduced the matrices, start the 
         // back substitution process to solve for vector x.
 
@@ -126,6 +133,13 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
          * upper-triangular matrix formed in the elimination process
          * above. 
          */
+
+		for(i=0; i<N; i++){
+			for(j=0; j<N; j++){
+				printf("%f  ", *(a+(N*i) + j));
+			}
+			printf("\n");
+		}
 
         for (k=0; k<N-1; k++ ) {
             // Swap rows x with p(k) 

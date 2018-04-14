@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <papi.h>
 #include <time.h>
+#include <math.h>
 //test program
 
 double dot_(int *num_threads, int *N, double *vec1, double *vec2);
@@ -117,10 +118,18 @@ int atoi(const char *str);
 			//create random matrix and vector each time 
 			srand(time(NULL));
 			for(i=0; i<size; i++){
-				*(vec1 + i) = (double) rand();
+				*(vec1 + i) = (double) fmod(rand(), 100.0-1.0 + 1.0) +1.0;
+				printf("vec1 at %d : %f\n", i, *(vec1+i));
 				for(j=0; j<size; j++){
-					*(im + (size*i) + j) =(double) rand();
+					*(im + (size*i) + j) =(double) fmod(rand(), 100.0-1.0 + 1.0) +1.0;
 				}
+			} 
+
+			for(i=0; i<size; i++){
+				for(j=0; j<size; j++){
+				printf("%f  ", *(im+(size*i) + j));
+				}
+				printf("\n");
 			}
 
 		#endif
@@ -205,22 +214,24 @@ int atoi(const char *str);
 		#ifdef DOT
 			//call dot function
 			ans = dot_(thread, N, vec1, vec2);
-			//printf("%f", ans);
 		#endif
 
 		#ifdef VVM
 			vvm_(thread, N, vec1, vec2, ma);
-			//for(i=0; i<size; i++){
-			//	for(j=0; j<size; j++){
-			//		printf("%f", *(ma +(size*i) +j));
-			//		printf(" ");
-			//	}
-			//	printf("\n");
-			//}
+			/*for(i=0; i<size; i++){
+				for(j=0; j<size; j++){
+					printf("%f", *(ma +(size*i) +j));
+					printf(" ");
+				}
+				printf("\n");
+			} */
 		#endif
 
 		#ifdef MVV
 			mvv_(thread, N, im, vec1, vec2);
+			for(i=0; i<size; i++){
+				printf("%f\n", *(vec2+i));
+			}
 		#endif
 
 		#ifdef MMM
@@ -270,7 +281,6 @@ int atoi(const char *str);
 			printf(" DP_OPS Count from PAPI= %15lld\n", dp_ops[0]);
 
 			//compute and print megaflops based on PAPI counters
-			mflops = (double) (dp_ops[0]/cpu)/1000000.0;
 			//j is number of threads
 			printf("%d %f %f %f %15lld %d \n", size, mflops, cpu, wall, dp_ops[0], thr);
 		#endif

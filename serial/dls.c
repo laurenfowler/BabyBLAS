@@ -121,6 +121,14 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
          * above. 
          */
 
+		for(i=0; i<N; i++){
+			for(j=0; j<N; j++){
+				printf("%f  ", *(a+(N*i) + j));
+			}
+			printf("\n");
+		}
+
+
         for (k=0; k<N-1; k++ ) {
             // Swap rows x with p(k) 
             tmp = *(b+k);

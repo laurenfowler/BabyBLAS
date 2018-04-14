@@ -17,18 +17,19 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2){
 
 	int i, len;
 	double sum;
-	double *ansvec;
 
 	len = *N;
 	sum = 0;	
-	ansvec = (double *) malloc (len * sizeof(double));
 
-	printf("in openmp dot");
+	printf("in openmp dot\n");
 	omp_set_num_threads(*num_threads);
 
-	#pragma omp for 
-	for (i=0; i<len; i++){
-		sum = sum + (*(vec1 + i) * *(vec2 + i));
+	#pragma omp parallel shared(len) private(i) reduction(+:sum)
+	{ 
+		#pragma omp for
+		for (i=0; i<len; i++){
+			sum = sum + (*(vec1 + i) * *(vec2 + i));
+		}
 	}
 
 	return sum;

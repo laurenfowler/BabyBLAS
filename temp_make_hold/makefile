@@ -6,10 +6,10 @@
 
 include Makefile.inc
 
-all : testprog openmp serial pthreads lbstime
+all : testprog serial pthreads openmp lbstime
 
 #Tried liking library to test.o file???
-testprog: test.o openmp serial pthreads lbstime
+testprog: test.o serial pthreads openmp lbstime
 	$(CC) test.o -o testprog -lm $(LDLIBS) $(SYSLIBS)
 
 test.o: test.c
