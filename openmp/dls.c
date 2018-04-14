@@ -95,8 +95,6 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
             // Now do block reduction
             *(p+k) = iPivot;
             if ( *(a+k*N+k) != ZERO ) {
-				printf("doing block reduction\n");
-				
 				#pragma omp parallel shared(N) private(rows, rows2)
 				{
 				#pragma omp for
@@ -133,13 +131,6 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
          * upper-triangular matrix formed in the elimination process
          * above. 
          */
-
-		for(i=0; i<N; i++){
-			for(j=0; j<N; j++){
-				printf("%f  ", *(a+(N*i) + j));
-			}
-			printf("\n");
-		}
 
         for (k=0; k<N-1; k++ ) {
             // Swap rows x with p(k) 
