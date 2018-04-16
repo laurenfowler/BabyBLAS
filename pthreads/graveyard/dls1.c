@@ -1,4 +1,5 @@
 
+
 /**********************************************************************
  *
  * DIRECT LINEAR SOLVER
@@ -16,7 +17,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void dls_( int *threads, int *len,  double *a, double *b, double*x );
+    void dls_( int *threads, int *len,  double *a, double *b, double*c );
 #ifdef __cplusplus
 }
 #endif
@@ -26,23 +27,29 @@ void dls_( int *threads, int *len,  double *a, double *b, double*x );
 #include <stdlib.h>
 #include <pthread.h>
 
-
 /* Function prototype for code used in dls */
 int strictlyDiagonallyDominant( int N, double *a ); 
-
 void *dls_thread_worker();
 
 struct args{
 	int N;
 	int startRow;
 	int stopRow;
-	int k;
-	double *aPtr;
-	double *bPtr;
-	double *xPtr;
+	int *p_ptr;
+	double *Aptr;
+	double *Bptr;
+	double *Xptr;
 };
 
 void dls_( int *threads, int *len,  double *a, double *b, double *x ){
+
+	pthread_t *thread_id;
+	struct args *thread_args;
+	int start, stop;
+	int num_threads = *threads;
+	int *num_rows;
+	double *new;
+	double temp;
 
     int i, j, k, N, u;
     int singular, iPivot, rows, rows2;
@@ -50,9 +57,21 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
     double sum;
     double ZERO = 0.0;
     int *p;
-	int num_threads = *threads;
 
     N = *len;
+
+	new = (double *) calloc ((N + 1) * N , sizeof(double));
+
+	//Avoid stop-1 statement so no rows are skipped 
+	for(i=0; i<N; i++){
+		for(j=0; j<N; j++){
+		*(new+ (N*i) + j) = *(a + (N * i) + j);
+		}
+	}
+
+	//ensure n+1, n slot will not be bigger than n,n
+	*(new + ( (N+1) * (N+1)) + N) = 1E-16;
+
 
     // Check A for strict diagonal dominance to see if we can reduce the matrix without 
     // doing any row interchanges.   We could also check for positive definiteness to
@@ -65,92 +84,60 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
 
         // Create an array to hold pivot swaps 
 
-        p = malloc( (N-1) * sizeof(int) );
+//        p = malloc( (N-1) * sizeof(int) );
 
-        for (k=0;k<N-1;k++) *(p+k)=k;
+ //       for (k=0;k<N-1;k++) *(p+k)=k;
 
-        // Search for largest value in the column and swap the 
-        // entire row containing that value with the current
-        // pivot row.
+		//malloc array for thread id's
+		thread_id = (pthread_t *) malloc (num_threads * sizeof(pthread_t));
 
-        for (k=0;k<N-1;k++) {
-            pivotMax = *(a+k*N+k);
-            iPivot = k; 
-            for (u=k;u<N;u++) {
-                if ( fabs(*(a+u*N+k)) > fabs(pivotMax) ) {
-                    pivotMax = *(a+u*N+k);
-                    iPivot = u;
-                }
-            }
-            // If a greater pivot value was found, swap the rows.
-            if ( iPivot != k ) {
-                u = iPivot; 
-                for (j=k;j<N;j++) {
-                    tmp = *(a+k*N+j);
-                    *(a+k*N+j) = *(a+u*N+j);
-                    *(a+u*N+j)=tmp;
-                }
-            }
+		//malloc array to keep up with num rows per thread
+		num_rows = (int *) malloc (num_threads * sizeof(int));
+
+		//determine number rows
+		for(i=0; i<num_threads; i++){
+			*(num_rows+i) = N/num_threads;
+		}
+		for(i=0; i<N%num_threads; i++){
+			*(num_rows+i) = *(num_rows+i) + 1;
+		}
+
+		//printf("%d\n", *(num_rows + 0));
+		//printf("%d\n", *(num_rows + 1));
+
+		//malloc memory for struct
+		stop = 0;
+		for(i=0; i< num_threads; i++){
+			start = stop;
+			stop = start + *(num_rows + i);
+			thread_args = (struct args *) malloc (sizeof(struct args));
+			thread_args -> N = N;
+			thread_args -> stopRow = stop;
+			thread_args -> startRow = start;
+			thread_args -> Aptr = new;
+			thread_args -> Bptr = b;
+			thread_args -> p_ptr = p;
+
+			pthread_create(thread_id+i, NULL, &dls_thread_worker, thread_args);
+		}
+
+		for(i=0; i<num_threads; i++){
+			printf("in pthread_join\n");
+			pthread_join( *(thread_id+i), NULL);
+		}
 
 
-            // Now do block reduction
-            *(p+k) = iPivot;
-            if ( *(a+k*N+k) != ZERO ) {
-
-			//start pthreads optimization
-			int *num_rows;
-			int startRow, stopRow;
-			pthread_t *thread_id;
-			struct args *thread_args;						
-	
-			thread_id = (pthread_t *) malloc (num_threads * sizeof(pthread_t));
-			num_rows = (int *) malloc (num_threads * sizeof(int));
-
-			for(i=0; i<num_threads; i++){
-				*(num_rows+i) = (N-k)/num_threads;
+		//make a into new
+		for(i=0; i<N; i++){
+			for(j=0; j<N; j++){
+			*(a+ (N*i) + j) = *(new + (N * i) + j);
 			}
-			for(i=0; i<(N-k)%num_threads; i++){
-				*(num_rows+i) = *(num_rows+i) + 1;
-			}
+		}
 
-			stopRow=k;
-			for(i=0; i<num_threads; i++){
-				startRow=stopRow;
-				stopRow = startRow + *(num_rows+i);
-				thread_args = (struct args *) malloc(sizeof(struct args));
-				thread_args -> N = N;
-				thread_args ->startRow = startRow;
-				thread_args -> stopRow = stopRow;
-				thread_args -> aPtr = a;
-				thread_args -> bPtr = b;
-				thread_args -> xPtr = x;
-				thread_args -> k = k;
-
-				pthread_create(thread_id+i, NULL, &dls_thread_worker, thread_args);
-			}
-
-			for(i=0; i<num_threads; i++){
-				pthread_join( *(thread_id+i), NULL);
-			}
-
-			free(num_rows);
-			free(thread_id);
-
-            }
-
-            else {
-
-                /* Handle the case of a zero pivot element, singular matrix */
-
-                printf( "Element a[%d][%d} = %f\n", k, k, *(a+k*N+k)); 
-                printf( " *** MATRIX A IS SINGULAR *** \n");
-                printf( "    -- EXECUTION HALTED --\n");
-                exit(1);
-            }
+		printf("after");
 
 
 
-        }
         // Now that we know we have reduced the matrices, start the 
         // back substitution process to solve for vector x.
 
@@ -184,14 +171,9 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
             *(b+i) = ( *(b+i) - tmp ) / *(a+i*N+i); 
         }
 
-        for (i=0;i<N;i++){
-			 *(x+i) = *(b+i);
-			 //printf("%f", *(x+i) = *(b+i));
-			 //printf("\n");
-		}
+        for (i=0;i<N;i++) *(x+i) = *(b+i);
 
         // At this point the solution to the system should be in vector x 
-
 
         free(p);
     }
@@ -257,40 +239,95 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
 
         // At this point the solution to the system should be in vector x 
 
-	
+
     }
 
-}
-//end of main
+	free(num_rows);
+	free(thread_id);
 
-void *dls_thread_worker(struct args *thread_args){
-	int i, j, rows, col, k;
-	int start, stop, N;
-	double *a, *b, *x;
-	
-		//unpack arguments; i passed in k as well
+}
+
+void *dls_thread_worker( struct args *thread_args){
+
+
+		int i, j, k, N, u;
+		int start, stop;
+		int singular, iPivot, rows, rows2;
+		double *a;
+		double pivotMax, tmp, *y;
+		double sum;
+		double ZERO = 0.0;
+		int *p;
+
+		//unpack thread args
 		N = thread_args -> N;
 		start = thread_args -> startRow;
 		stop = thread_args -> stopRow;
-		a = thread_args -> aPtr;
-		b = thread_args -> bPtr;
-		x = thread_args -> xPtr;
-		k = thread_args -> k; 
+		a = thread_args -> Aptr;
+		//p = thread_args -> p_ptr;
 
-		//printf("k:  %d   start:  %d  stop:   %d\n",k, start+1, stop);
+		p = (int *) malloc (N * sizeof(int));
+		for(k=0; k<N; k++) *(p+k) = k;
 
-		for (rows=start+1;rows<stop;rows++) { 
-			*(a+rows*N+k) = *(a+rows*N+k) / *(a+k*N+k);
 
-			for (col=k+1;col<N;col++) { 
-				*(a+rows*N+col) = *(a+rows*N+col) - 
-					*(a+rows*N+k) * *(a+k*N+col) ;
-			}
-		}
+        // Search for largest value in the column and swap the 
+        // entire row containing that value with the current
+        // pivot row.
+
+		//original: for(k=0; k<N-1; k++){
+        for (k=start;k<stop;k++) {
+            pivotMax = *(a+k*N+k);
+            iPivot = k;
+			//goes down column and searches for larger value 
+            for (u=k;u<N;u++) {
+                if ( fabs(*(a+u*N+k)) > fabs(pivotMax) ) {
+                    pivotMax = *(a+u*N+k);
+                    iPivot = u;
+                }
+            }
+            // If a greater pivot value was found, swap the rows.
+            if ( iPivot != k ) {
+                u = iPivot; 
+				//j=k because do not need to swap 0 entires
+                for (j=k;j<N;j++) {
+                    tmp = *(a+k*N+j);
+                    *(a+k*N+j) = *(a+u*N+j);
+                    *(a+u*N+j)=tmp;
+                }
+            }
+
+			printf("hi %d\n", k);
+            // Now do block reduction
+            *(p+k) = iPivot;
+            if ( *(a+k*N+k) != ZERO ) {
+                for (rows=k+1;rows<N;rows++) { 
+                    *(a+rows*N+k) = *(a+rows*N+k) / *(a+k*N+k);
+
+                    for (rows2=k+1;rows2<N;rows2++) { 
+                        *(a+rows*N+rows2) = *(a+rows*N+rows2) - 
+                            *(a+rows*N+k) * *(a+k*N+rows2) ;
+                    }
+                }
+            }
+
+            else {
+
+                /* Handle the case of a zero pivot element, singular matrix */
+
+                printf( "Element a[%d][%d} = %f\n", k, k, *(a+k*N+k)); 
+                printf( " *** MATRIX A IS SINGULAR *** \n");
+                printf( "    -- EXECUTION HALTED --\n");
+                exit(1);
+            }
+
+        }
+			printf("bye\n");
 
 		free(thread_args);
 		pthread_exit(NULL);
+
 }
+
 
 int strictlyDiagonallyDominant( int N, double *a ) {
 
