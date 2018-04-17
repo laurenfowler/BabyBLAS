@@ -2,9 +2,9 @@
 #
 include Makefile.inc
 
-all : driver pthreads serial openmp lbstime 
+all : driver openmp serial pthreads lbstime 
 
-driver: driver.o pthreads openmp serial lbstime pthreads 
+driver: driver.o openmp serial pthreads lbstime  
 	$(F90) driver.o -o driver $(MYLIBS) $(SYSLIBS)  
 
 driver.o: driver.f90

@@ -21,7 +21,6 @@ double dot_(int *num_threads, int *N, double *vec1, double *vec2){
 	len = *N;
 	sum = 0;	
 
-	printf("in openmp dot\n");
 	omp_set_num_threads(*num_threads);
 
 	#pragma omp parallel shared(len) private(i) reduction(+:sum)

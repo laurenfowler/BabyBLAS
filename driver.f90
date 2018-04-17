@@ -264,7 +264,7 @@ end program driver
 
 ! Subroutine to build random linear systems for Solvers to Use,
 !  (A. Pounds, 2018)
-subroutine buildLinearSystem( N, A, B, X,  DIAG_DOMINANT, SPARSE_MATRIX )
+subroutine buildLinearSystem( N, A, B, X,  DIAG_DOMINANT, SPARSE_MATRIX)
 
 integer :: N;
 real (kind=8), dimension(N,N) :: A 
@@ -286,7 +286,7 @@ if (DIAG_DOMINANT ) then
    do j=1, N 
       rowsum=rowsum+abs(A(j,i))
    enddo
-   A(i,i) = rowsum-abs(A(i,i))+100.0
+   A(i,i) = rowsum-abs(A(i,i))+ dble(N) +100.0;
  enddo
 endif
 

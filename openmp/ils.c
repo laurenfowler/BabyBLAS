@@ -23,8 +23,8 @@ extern "C" {
 #include <math.h>  
 #include <stdio.h>  
 #include <stdlib.h>
+#include <omp.h>
 
-/*  S E R I A L   C O D E  */
 
 // Need the following prototype in case of a zero along the diagonal
 void  dls_( int *threads, int *len, double *a, double *b, double *x );
@@ -79,6 +79,9 @@ void ils_( int *threads, int *len,  double *a, double *b, double *x ){
         ITERATION_MAX = fmax(ITERATION_MAX, N/3);
 
         iteration = 0;
+
+		omp_set_num_threads(*threads);
+
         while ( !converged(N,x,x0) && iteration < ITERATION_MAX ) {
 
             // copy last result to initial values
@@ -86,18 +89,21 @@ void ils_( int *threads, int *len,  double *a, double *b, double *x ){
             for (i=0;i<N;i++) *(x0+i) = *(x+i);
 
             // start the reduction process  (ref: Golub and van Loan, Chapter 10)
+			#pragma omp parallel shared(N) private (i,j)
+			{	
+				#pragma omp for
+				for (i=0;i<N;i++) { 
+					sum1 = 0.0;
+					for (j=0;j<i-1;j++) sum1+= *(a+i*N+j)* *(x0+j); 
+					sum2 = 0.0; 
+					for (j=i+1;j<N;j++) sum2+= *(a+i*N+j)* *(x0+j); 
+					*(x+i) = ( *(b+i) - sum1 - sum2 ) / *(a+i*N+i);
+				}
 
-            for (i=0;i<N;i++) { 
-                sum1 = 0.0;
-                for (j=0;j<i-1;j++) sum1+= *(a+i*N+j)* *(x0+j); 
-                sum2 = 0.0; 
-                for (j=i+1;j<N;j++) sum2+= *(a+i*N+j)* *(x0+j); 
-                *(x+i) = ( *(b+i) - sum1 - sum2 ) / *(a+i*N+i);
-            }
-
-            iteration++;
-
-        }
+       		}
+			iteration++;
+//			printf("iter %d\n", iteration);
+			}
 
         // the initial value array is no longer needed
         free(x0);

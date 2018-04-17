@@ -2,9 +2,7 @@
 
 F90 = gfortran 
 CC  = gcc
-FFLAGS = -cpp -g -DACCURACY_TEST -DLS_TEST -DITERATIVE -DDIAGDOM
+FFLAGS = -cpp -g -DLS_TEST -DITERATIVE -DDIAGDOM 
 CFLAGS = -g -fopenmp 
-MYLIBS = -L./pthreads -lpthreads_bblas -L./serial -lserial_bblas -L./lbstime -llbstime 
-
-#-L./openmp -lopenmp_bblas 
+MYLIBS =  -L./openmp -lopenmp_bblas -L./serial -lserial_bblas -L./pthreads -lpthreads_bblas -L./lbstime -llbstime 
 SYSLIBS = -lgomp -lpthread
