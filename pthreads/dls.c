@@ -135,9 +135,9 @@ void dls_( int *threads, int *len,  double *a, double *b, double *x ){
 //		printf("malloced space\n");
 
 		for(i=0; i<num_threads; i++){
-			*(num_rows+i) = (N-k)/num_threads;
+			*(num_rows+i) = (N-k-1)/num_threads;
 		}
-		for(i=0; i<(N-k)%num_threads; i++){
+		for(i=0; i<(N-k-1)%num_threads; i++){
 			*(num_rows+i) = *(num_rows+i) + 1;
 		}
 
@@ -353,6 +353,8 @@ void *dls_thread_worker(struct args *thread_args){
 	double *a, *b, *x;
 	int *piv_store;
 	double pivotMax;
+
+	//printf("in thread worker\n");
 
 		//unpack arguments; i passed in k as well
 		N = thread_args -> N;
