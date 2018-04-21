@@ -156,6 +156,7 @@ allocate ( matrixa(NDIM,NDIM), stat=ierr)
 allocate ( matrixb(NDIM,NDIM), stat=ierr)
 allocate ( matrixc(NDIM,NDIM), stat=ierr)
 
+
 #ifndef LS_TEST
 ! Build veca and vecb which, their tensor product creates the two matrices 
 ! to be multiplied.
@@ -286,9 +287,10 @@ if (DIAG_DOMINANT ) then
    do j=1, N 
       rowsum=rowsum+abs(A(j,i))
    enddo
-   A(i,i) = rowsum-abs(A(i,i))+ dble(N) +100.0;
+   A(i,i) = (rowsum-abs(A(i,i)))+ dble(N) +100.0;
  enddo
 endif
+
 
 if (SPARSE_MATRIX) then
 !Build sparse matrix with 5 superdiagonals and 5 subdiagonals

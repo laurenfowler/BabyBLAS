@@ -41,6 +41,7 @@ struct args{
 	int N;
 	int startRow;
 	int stopRow;
+	int iter;
 	double *aPtr;
 	double *bPtr;
 	double *xPtr;
@@ -77,51 +78,40 @@ void ils_( int *threads, int *len,  double *a, double *b, double *x ){
 			ITERATION_MAX = fmax(ITERATION_MAX, N/3);
 
 			iteration = 0;
-			while ( !converged(N,x,x0) && iteration < ITERATION_MAX ) {
 
-				// copy last result to initial values
+			for (i=0;i<N;i++) *(x0+i) = *(x+i);
 
-				for (i=start;i<stop;i++) *(x0+i) = *(x+i);
-
-				for(i=0; i<num_threads; i++){
-					*(num_rows+i) = N/num_threads;
-				}
-				for(i=0; i<N%num_threads; i++){
-					*(num_rows + i) = *(num_rows+i) + 1;
-				}
-
-				stop=0;
-				for(i=0; i<num_threads; i++){
-					start = stop;
-					stop = start+ *(num_rows+i);
-					thread_args = (struct args *) malloc (sizeof(struct args));
-					thread_args -> N = N;
-					thread_args ->stopRow = stop;
-					thread_args -> startRow =start;
-					thread_args -> aPtr = a;
-					thread_args -> bPtr = b;
-					thread_args -> xPtr = x;
-					thread_args -> x0ptr = x0;
-
-					pthread_create(thread_id+i, NULL, &ils_thread_worker, thread_args);
-				}
-
-				for(i=0; i<num_threads; i++){
-					pthread_join(*(thread_id + i), NULL);
-				}
-
-			iteration++;
-
+			for(i=0; i<num_threads; i++){
+				*(num_rows+i) = N/num_threads;
 			}
+			for(i=0; i<N%num_threads; i++){
+				*(num_rows + i) = *(num_rows+i) + 1;
+			}
+
+			stop=0;
+			for(i=0; i<num_threads; i++){
+				start = stop;
+				stop = start+ *(num_rows+i);
+				thread_args = (struct args *) malloc (sizeof(struct args));
+				thread_args -> N = N;
+				thread_args ->stopRow = stop;
+				thread_args -> startRow =start;
+				thread_args -> aPtr = a;
+				thread_args -> bPtr = b;
+				thread_args -> xPtr = x;
+				thread_args -> x0ptr = x0;
+				thread_args -> iter = iteration;
+
+				pthread_create(thread_id+i, NULL, &ils_thread_worker, thread_args);
+			}
+
+			for(i=0; i<num_threads; i++){
+				pthread_join(*(thread_id + i), NULL);
+			}
+
 
 			// the initial value array is no longer needed
 			free(x0);
-
-			if ( iteration == ITERATION_MAX) {
-				printf(" *** ITERATIVE SOLVER FAILED TO REACH CONVERGENCE AFTER  ***\n");
-				printf(" *** %d ITERATIONS, SWITCHING TO DIRECT SOLVER ***\n", iteration);
-				dls_( threads, len, a, b, x );
-			}
 
 		}
 
@@ -148,6 +138,7 @@ void *ils_thread_worker(struct args *thread_args){
 	int start, stop;
 	int *threads;
 	double *a, *b, *x;
+	int *len = &N;
 
 	N = thread_args -> N;
 	start = thread_args-> startRow;
@@ -156,15 +147,31 @@ void *ils_thread_worker(struct args *thread_args){
 	b = thread_args -> bPtr;
 	x = thread_args -> xPtr;
 	x0 = thread_args -> x0ptr;	
-	
+	iteration = thread_args -> iter;
+
+	while ( !converged(N,x,x0) && iteration < ITERATION_MAX ) {
+
+	// copy last result to initial values
+
 		// start the reduction process  (ref: Golub and van Loan, Chapter 10)
 		for (i=start;i<stop;i++) { 
 			sum1 = 0.0;
-			for (j=0;j<N-1;j++) sum1+= *(a+i*N+j)* *(x0+j); 
+			for (j=start;j<stop-1;j++) sum1+= *(a+i*N+j)* *(x0+j); 
 			sum2 = 0.0; 
-			for (j=i+1;j<N;j++) sum2+= *(a+i*N+j)* *(x0+j); 
+			for (j=start+1;j<stop;j++) sum2+= *(a+i*N+j)* *(x0+j); 
 			*(x+i) = ( *(b+i) - sum1 - sum2 ) / *(a+i*N+i);
 		}
+
+		iteration++;
+
+	}
+	
+	if ( iteration == ITERATION_MAX) {
+		printf(" *** ITERATIVE SOLVER FAILED TO REACH CONVERGENCE AFTER  ***\n");
+		printf(" *** %d ITERATIONS, SWITCHING TO DIRECT SOLVER ***\n", iteration);
+		dls_( threads, len, a, b, x );
+	}
+
 
 	free(thread_args);
 	pthread_exit(NULL);
