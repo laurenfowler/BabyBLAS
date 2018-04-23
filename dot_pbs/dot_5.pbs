@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -N dot_5_pthr
+#PBS -m abe
+#PBS -M fowler_l
+#PBS -j oe
+#PBS -k n
+#PBS -l nodes=1:hammer:ppn=5
+#
+cd BabyBLAS
+testprog 100000 5; testprog 100000 5; testprog 100000 5;
+testprog 200000 5; testprog 200000 5; testprog 200000 5;
+testprog 300000 5; testprog 300000 5; testprog 300000 5;
+testprog 400000 5; testprog 400000 5; testprog 400000 5;
+testprog 500000 5; testprog 500000 5; testprog 500000 5;
+testprog 600000 5; testprog 600000 5; testprog 600000 5;
+testprog 700000 5; testprog 700000 5; testprog 700000 5;
+testprog 800000 5; testprog 800000 5; testprog 800000 5;
+testprog 900000 5; testprog 900000 5; testprog 900000 5;
+testprog 1000000 5; testprog 1000000 5; testprog 1000000 5;

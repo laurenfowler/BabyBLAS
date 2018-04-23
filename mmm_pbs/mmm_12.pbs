@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -N mmm_12_omp
+#PBS -m abe
+#PBS -M fowler_l
+#PBS -j oe
+#PBS -k n
+#PBS -l nodes=1:hammer:ppn=12,walltime=2:00:00
+#
+cd BabyBLAS
+driver 500 5000 500 12
+
