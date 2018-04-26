@@ -1,0 +1,64 @@
+#!/bin/bash
+#PBS -N Lab_OpenMP_job1
+#PBS -m abe
+#PBS -M fowler_l
+#PBS -j oe
+#PBS -k n
+#PBS -l nodes=4:ithica:ppn=2,walltime=5:00:00
+#
+cd ~/BabyBLAS
+echo " 5 Threads "
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+./driver 9000 9000 10 5
+
+echo " 6 Threads "
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+./driver 9000 9000 10 6
+
+
+echo " 7 Threads "
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+./driver 9000 9000 10 7
+
+echo " 8 Threads "
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+./driver 9000 9000 10 8
+
+
+
+
+
+
+
