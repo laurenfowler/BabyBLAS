@@ -1,0 +1,20 @@
+#!/bin/bash
+#PBS -N mmm_12
+#PBS -m abe
+#PBS -M fowler_l
+#PBS -j oe
+#PBS -k n
+#PBS -l nodes=1:hammer:ppn=12,walltime=5:30:00
+#
+cd BabyBLAS
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+driver 9000 9000 10 12
+
