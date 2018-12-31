@@ -3,6 +3,7 @@
 Optimized Basic Linear Algerba Subroutines (BLAS)
 
 Uses single proccessor optimaztion as well as shared memory multiprocessing using OpenMP and pThreads
+
 Subroutines are built in C/C++ which are built into libraries using a Makefile and can be called from C/C++/Fortran 
 
 Subroutines: 
